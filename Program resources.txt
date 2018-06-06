@@ -1,0 +1,41 @@
+*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+Program in depth Details
+*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+Working:
+
+
+
+-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+Technical:
+
+Breaking down what i need.
+
+So i need a setup where a web server can handle multiple client requests.
+Will this effect The FTP server on a different IP:PORT? shouldn't do.
+
+I can program it to separate the code for FTP requests and how it is handled. 
+Will the program respond?
+
+Can also perform a collision checks of the IPs using regex.
+String stream the IPs and ports against already running services.
+Compare strings if PORT or IPs match flag an error.
+
+I know for this to work i am going to go with class headers and cpp files.
+something i am itching to do.
+
+So far a simple single-threaded server implementation of HTTP 1.0.
+is where i am at. that would be great but i could a least do with HTML 3 or 4.
+
+Going to work through the tutorials this weekend for creating a simple timer server.
+
+It was going to be implemented anyway shall start there. 
+
+
+
+
+
+
+
+
