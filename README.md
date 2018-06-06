@@ -29,6 +29,7 @@ When Is0bel Server [program] is running your server is running.
 This is not serviced based.
  
 HOWEVER i will add argv for command line boot options.
+
 e.g Is0bel.Server.exe -web -ftp -echo 
 
 Will start the program and automatically start the services requested.
@@ -37,6 +38,7 @@ Using last known saved settings.
 So you can add Is0bel server to startup settings in windows. 
 
 That is the ONLY time Is0bel Server will start a service without you clicking
+
 a checkbox or start button. By default Is0bel server is inert. <- Reread
 
 Click "?" <-For detailed information within the program.
@@ -49,6 +51,7 @@ boost ASIO. MySQL ++. [Others to be added]
 
 
 Includes ALL necessary .dlls for windows sockets ws2_32.dll, wsock2.dll.
+
 Includes ALL necessary .dlls for boost & linkers. <- More may be added
 
 libws2_32.a
@@ -63,7 +66,7 @@ libboost_system-mgw49-mt-x32-1_67.dll.a
 libboost_thread-mgw49-mt-x32-1_67.dll.a
 
 
-^ [name]-[target compiler]-[Multi Threading]-[Architecture]-[Version]
+[name]-[target compiler]-[Multi Threading]-[Architecture]-[Version]
 
 
 Will be made fully functional as it is needed to test my in program web browser.
