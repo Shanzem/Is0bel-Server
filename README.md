@@ -137,7 +137,7 @@ For programming
 - MySQL++ for mingw64 Dev++
 
 check my dependences repository for download links to pre built binaries.
-
+https://github.com/Shanzem/My-Dependences
 
 As always check source for details & program resources.txt.
 
