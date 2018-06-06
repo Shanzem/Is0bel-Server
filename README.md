@@ -11,7 +11,7 @@ Console program only.
 Going to work through the tutorials this weekend.
 
 Get a GUI HTTP 1.0 server up and running.
-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 
 Is0bel Server -ISO- -This is NOT a toy program
 
