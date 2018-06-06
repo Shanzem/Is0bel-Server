@@ -55,14 +55,23 @@ Includes ALL necessary .dlls for windows sockets ws2_32.dll, wsock2.dll.
 Includes ALL necessary .dlls for boost & linkers. <- More may be added
 
 libws2_32.a
+
 libwsock32.a
+
 libboost_coroutine-mgw49-mt-x32-1_67.dll.a
+
 libboost_date_time-mgw49-mt-x32-1_67.dll.a
+
 libboost_exception-mgw49-mt-x32-1_67.a
+
 libboost_serialization-mgw49-mt-x32-1_67.dll.a
+
 libboost_signals-mgw49-mt-x32-1_67.dll.a
+
 libboost_system-mgw49-mt-x32-1_67.a
+
 libboost_system-mgw49-mt-x32-1_67.dll.a
+
 libboost_thread-mgw49-mt-x32-1_67.dll.a
 
 
