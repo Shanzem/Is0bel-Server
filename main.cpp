@@ -1,6 +1,29 @@
-// ImGui - standalone example application for DirectX 9
-// If you are new to ImGui, see examples/README.txt and documentation at the top of imgui.cpp.
+//////////////////////////////////////////////////////////////
+//
+//
+//	Web server progress - First server -
+//
+// 	Click "Play" now works and starts the server.
+//	Well i have an HTTP 1.0 server. still need to add stop.
+//	Destroy thread.
+//
+//	Will have no doubt use the third party library example for CEF. 
+//	Also for getting at least HTTP 3.0+ server.
+//
+//	Echo server +  client slapped toghter.
+//
+//	Time and date server in & client.
+//
+//
+//////////////////////////////////////////////////////////////////
+//
+//	Includes
+//
+#include <boost/thread.hpp>
+#include <boost/chrono.hpp>
 #include <boost/asio.hpp>
+#include <boost/bind.hpp>
+#include "server.hpp"
 #include "imgui.h"
 #include "imgui_impl_dx9.h"
 #include <d3d9.h>
@@ -15,31 +38,246 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
+#include "Echo_server.hpp"
+#include "Daytime_server.hpp"
 //#include <boost/filesystem.hpp>
 //////////////////////////////////////////////////////////////
 //
-//	Web server progress - First server -
+//	Using section
 //
-//	Need to grab some sample sources & tutorials.
-//	One provided is painfully hard to follow.
-//	And command line based only.
-//	I know i am going to have to use class function to
-//	get this working correctly as i hope and intend.
-//
-//	This means more headers/cpp files added to the project.
-//
-//	I compiled and tested the example server.
-//
-//	I have everything now just work through the code.
-//			
-//	Web server first so i can then update the browser.
-//
-//	I need to understand this to expand the browser using CEF.
-
-
 using namespace std;
+using boost::asio::ip::tcp;
+/////////////////////////////////////////////////////////////////
+//
+// Web server input & outputs.
+//
+static char web_server_IP[256] = "127.0.0.1";
+static char web_server_PORT[256] = "80";
+static char web_server_webpage[256] = "C:\\";
 
-
+bool web_status_empty					=	true;
+bool web_status_red						=	false;
+bool web_status_yellow					=	false;
+bool web_status_green					=	false;
+/////////////////////////////////////////////////////
+//
+//	FTP server inputs & outputs
+//
+static char ftp_server_IP[256] = "127.0.0.1";
+static char ftp_server_PORT[256] = "2020";
+static char ftp_server_folder[256] = "C:\\home";
+bool ftp_status_empty					=	true;
+bool ftp_status_red						=	false;
+bool ftp_status_yellow					=	false;
+bool ftp_status_green					=	false;
+/////////////////////////////////////////////////////
+//
+//	Echo server setup
+//
+static char echo_server_port[256] = "3000";
+bool echo_allowed_status_empty		=	true;
+bool echo_allowed_status_red		=	false;
+bool echo_allowed_status_yellow		=	false;
+bool echo_allowed_status_green		=	false;
+//////////////////////////////////////////////////////////////////
+//
+// Date & time server.
+//
+bool date_time_server_status_empty		=	true;
+bool date_time_server_status_red		=	false;
+bool date_time_server_status_yellow		=	false;
+bool date_time_server_status_green		=	false;
+///////////////////////////////////////////////////////////////
+//
+//	Dummy traffic
+//
+bool Dummytraffic_status_empty					=	true;
+bool Dummytraffic_status_red					=	false;
+bool Dummytraffic_status_yellow					=	false;
+bool Dummytraffic_status_green					=	false;
+/////////////////////////////////////////////////////////////////
+//
+//	IRC chat
+//
+bool enable_chat_status_empty					=	true;
+bool enable_chat_status_red						=	false;
+bool enable_chat_status_yellow					=	false;
+bool enable_chat_status_green					=	false;
+////////////////////////////////////////////////////////////////
+//
+//	VOIP
+//
+bool team_speak_status_empty					=	true;
+bool team_speak_status_red						=	false;
+bool team_speak_status_yellow					=	false;
+bool team_speak_status_green					=	false;
+/////////////////////////////////////////////////////////////////
+//
+//	Log to other
+//
+bool log_to_other_status_empty					=	true;
+bool log_to_other_status_red					=	false;
+bool log_to_other_status_yellow					=	false;
+bool log_to_other_status_green					=	false;
+/////////////////////////////////////////////////////////////////
+//
+//	Is0bel states
+//
+bool startup_shutdown_status_empty				=	true;
+bool startup_shutdown_status_red				=	false;
+bool startup_shutdown_status_yellow				=	false;
+bool startup_shutdown_status_green				=	false;
+/////////////////////////////////////////////////////////////////
+//
+//	Automation
+//
+bool automation_status_empty					=	true;
+bool automation_status_red						=	false;
+bool automation_status_yellow					=	false;
+bool automation_status_green					=	false;
+/////////////////////////////////////////////////////////////////
+//
+//	Contribution
+//
+bool cycles_contribution_status_empty			=	true;
+bool cycles_contribution_status_red				=	false;
+bool cycles_contribution_status_yellow			=	false;
+bool cycles_contribution_status_green			=	false;
+/////////////////////////////////////////////////////////////////
+//
+//	preventative maintenance
+//
+bool preventative_maintenance_status_empty		=	true;
+bool preventative_maintenance_status_red		=	false;
+bool preventative_maintenance_status_yellow		=	false;
+bool preventative_maintenance_status_green		=	false;
+/////////////////////////////////////////////////////////////////
+//
+//	MySQL
+//
+bool mysql_database_custom_status_empty			=	true;
+bool mysql_database_custom_status_red			=	false;
+bool mysql_database_custom_status_yellow		=	false;
+bool mysql_database_custom_status_green			=	false;
+/////////////////////////////////////////////////////////////////
+//
+//	Bandwidth monitor
+//
+bool bandwidth_monitor_status_empty				=	true;
+bool bandwidth_monitor_status_red				=	false;
+bool bandwidth_monitor_status_yellow			=	false;
+bool bandwidth_monitor_status_green				=	false;
+/////////////////////////////////////////////////////////////////
+//
+//	IoT Devices
+//
+bool IoT_device_relay_or_storage_status_empty	=	true;
+bool IoT_device_relay_or_storage_status_red		=	false;
+bool IoT_device_relay_or_storage_status_yellow	=	false;
+bool IoT_device_relay_or_storage_status_green	=	false;
+/////////////////////////////////////////////////////////////////
+//
+//	LAN
+//
+bool local_area_network_status_empty			=	true;
+bool local_area_network_status_red				=	false;
+bool local_area_network_status_yellow			=	false;
+bool local_area_network_status_green			=	false;
+/////////////////////////////////////////////////////////////////
+//
+//	Ret-Dec services
+//
+bool retargetable_decompiler_status_empty		=	true;
+bool retargetable_decompiler_status_red			=	false;
+bool retargetable_decompiler_status_yellow		=	false;
+bool retargetable_decompiler_status_green		=	false;
+/////////////////////////////////////////////////////////////////
+//
+//	S2S idea
+//
+bool s2s_server_services_status_empty			=	true;
+bool s2s_server_services_status_red				=	false;
+bool s2s_server_services_status_yellow			=	false;
+bool s2s_server_services_status_green			=	false;
+//////////////////////////////////////////////////////////////////
+//
+//			
+//	Threading calls, or current working services/servers
+//	found here.
+//
+//void Print1() 
+//{
+//boost::this_thread::sleep_for(boost::chrono::milliseconds{500});
+//system("cmd");
+//}
+void Web_server_check() 
+{
+system("ipconfigure.netstat.a.bat");
+}
+void ipconfigure() 
+{
+system("ipconfigure.bat");
+}
+void ipconfigure_netstat_a() 
+{
+system("ipconfigure.netstat.a.bat");
+}
+void ipconfigure_netstat_f() 
+{
+system("ipconfigure.netstat.f.bat");
+}
+void ipconfigure_netstat_o() 
+{
+system("ipconfigure.netstat.o.bat");
+}
+void ipconfigure_netstat_on() 
+{
+system("ipconfigure.netstat.on.bat");
+}
+void ipconfigure_netstat_t() 
+{
+system("ipconfigure.netstat.t.bat");
+}
+void ipconfigure_wmic() 
+{
+system("ipconfigure.wmic.bat");
+}
+void ipconfigure_wmic_help() 
+{
+system("ipconfigure.wmic.help.bat");
+}
+void ImGui_web_server_start() 
+{
+web_status_empty	=	false;
+web_status_green	=	true;
+http::server::server s(web_server_IP, web_server_PORT, web_server_webpage);
+s.run();
+}
+void ImGui_echo_server_start() 
+{
+echo_allowed_status_empty	=	false;
+echo_allowed_status_green	=	true;	
+boost::asio::io_context io_context;
+server s(io_context, atoi(echo_server_port));
+io_context.run();
+}
+void echo_client_test() 
+{
+system("Echo.Client.test.bat");
+}
+void daytime_server_start()
+{
+date_time_server_status_empty		=	false;
+date_time_server_status_green		=	true;
+boost::asio::io_context io_context;
+tcp_server server(io_context);
+io_context.run();	
+}
+void Date_time_client_start()
+{
+system("Time.date.client.start.bat");
+}
+//////////////////////////////////////////////////////////////////
 // Data
 static LPDIRECT3DDEVICE9        g_pd3dDevice = NULL;
 static D3DPRESENT_PARAMETERS    g_d3dpp;
@@ -130,6 +368,7 @@ int main(int, char**)
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
+
 //////////////////////////////////////////////////////////////
 //
 //	Window bools
@@ -149,12 +388,7 @@ bool show_network_tools_logging		=	false;		// Show network IP logging
 bool show_network_tools_blocked		=	false;		// Show network IP block list
 bool show_network_tools_FTP_log		=	false;		// Show network FTP activities logging & events
 bool show_network_tools_admin		=	false;		// Show Admin tools,
-
-
-
-
-
-
+bool show_new_code_area				=	false;		// Shows new coding area outputs.
 ///////////////////////////////////////////////////////////
 //
 //	Images & icons
@@ -191,15 +425,10 @@ D3DXCreateTextureFromFile( g_pd3dDevice, "stop.png" ,		 &stop );
 D3DXCreateTextureFromFile( g_pd3dDevice, "downloads.png" ,	 &downloads );
 D3DXCreateTextureFromFile( g_pd3dDevice, "bookmarks.png" ,	 &bookmarks );
 D3DXCreateTextureFromFile( g_pd3dDevice, "mechanical.png" ,	 &settings );
-
-
-
-
 //////////////////////////////////////////////////////////
 //
 // Server start/pause/stop select & status
 //
-
 bool web_server_start					=	false;
 bool ftp_server_start					=	false;
 bool network_server_start				=	false;
@@ -211,22 +440,11 @@ bool network_server_pause				=	false;
 bool web_server_stop					=	false;
 bool ftp_server_stop					=	false;
 bool network_server_stop				=	false;
-
-bool ftp_status_empty					=	true;
-bool ftp_status_red						=	false;
-bool ftp_status_yellow					=	false;
-bool ftp_status_green					=	false;
-
-bool web_status_empty					=	true;
-bool web_status_red						=	false;
-bool web_status_yellow					=	false;
-bool web_status_green					=	false;
-
 //////////////////////////////////////////////////////////////
 //
-//	Network tools bools & functionality.
+//	Redudent bools 
+//	to be moved to there own place within source.
 //
-
 bool Dummytraffic 						=	false;
 bool echo_allowed						=	false;
 bool enable_chat						=	false;
@@ -246,8 +464,12 @@ bool stop_all_services					=	false;
 bool active_file_transfers				=	false;
 bool Web_page_hits						=	false;
 bool all_services_uptime				=	false;          
-        
-
+bool retargetable_decompiler			=	false;        
+bool s2s_server_services				=	false;
+////////////////////////////////////////////////////
+//
+//	Network tools setup bools
+//
 bool Dummytraffic_setup					=	false;
 bool echo_allowed_setup					=	false;
 bool enable_chat_setup					=	false;
@@ -263,70 +485,8 @@ bool bluetooth_to_network_adapter_setup	=	false;
 bool bandwidth_monitor_setup			=	false;
 bool IoT_device_relay_or_storage_setup	=	false;
 bool local_area_network_setup			=	false;
-
-bool Dummytraffic_status_empty					=	true;
-bool echo_allowed_status_empty					=	true;
-bool enable_chat_status_empty					=	true;
-bool team_speak_status_empty					=	true;
-bool log_to_other_status_empty					=	true;
-bool startup_shutdown_status_empty				=	true;
-bool automation_status_empty					=	true;
-bool cycles_contribution_status_empty			=	true;
-bool preventative_maintenance_status_empty		=	true;
-bool mysql_database_custom_status_empty			=	true;
-bool date_time_server_status_empty				=	true;
-bool bluetooth_to_network_adapter_status_empty	=	true;
-bool bandwidth_monitor_status_empty				=	true;
-bool IoT_device_relay_or_storage_status_empty	=	true;
-bool local_area_network_status_empty			=	true;
-
-bool Dummytraffic_status_red					=	false;
-bool echo_allowed_status_red					=	false;
-bool enable_chat_status_red						=	false;
-bool team_speak_status_red						=	false;
-bool log_to_other_status_red					=	false;
-bool startup_shutdown_status_red				=	false;
-bool automation_status_red						=	false;
-bool cycles_contribution_status_red				=	false;
-bool preventative_maintenance_status_red		=	false;
-bool mysql_database_custom_status_red			=	false;
-bool date_time_server_status_red				=	false;
-bool bluetooth_to_network_adapter_status_red	=	false;
-bool bandwidth_monitor_status_red				=	false;
-bool IoT_device_relay_or_storage_status_red		=	false;
-bool local_area_network_status_red				=	false;
-
-bool Dummytraffic_status_yellow					=	false;
-bool echo_allowed_status_yellow					=	false;
-bool enable_chat_status_yellow					=	false;
-bool team_speak_status_yellow					=	false;
-bool log_to_other_status_yellow					=	false;
-bool startup_shutdown_status_yellow				=	false;
-bool automation_status_yellow					=	false;
-bool cycles_contribution_status_yellow			=	false;
-bool preventative_maintenance_status_yellow		=	false;
-bool mysql_database_custom_status_yellow		=	false;
-bool date_time_server_status_yellow				=	false;
-bool bluetooth_to_network_adapter_status_yellow	=	false;
-bool bandwidth_monitor_status_yellow			=	false;
-bool IoT_device_relay_or_storage_status_yellow	=	false;
-bool local_area_network_status_yellow			=	false;
-
-bool Dummytraffic_status_green					=	false;
-bool echo_allowed_status_green					=	false;
-bool enable_chat_status_green					=	false;
-bool team_speak_status_green					=	false;
-bool log_to_other_status_green					=	false;
-bool startup_shutdown_status_green				=	false;
-bool automation_status_green					=	false;
-bool cycles_contribution_status_green			=	false;
-bool preventative_maintenance_status_green		=	false;
-bool mysql_database_custom_status_green			=	false;
-bool date_time_server_status_green				=	false;
-bool bluetooth_to_network_adapter_status_green	=	false;
-bool bandwidth_monitor_status_green				=	false;
-bool IoT_device_relay_or_storage_status_green	=	false;
-bool local_area_network_status_green			=	false;
+bool retargetable_decompiler_setup		=	false;
+bool s2s_server_services_setup			=	false;
 
 ////////////////////////////////////////////////////////////
 //
@@ -369,23 +529,46 @@ static ImGuiOnceUponAFrame Browser_settings;	// Bookmarks & browser settings.
 					}
 ///////////////////////////////////////////////////////////
 //
-// Webserver settings. Values below default
+// Webserver settings. Loading preset.
+//WIP
 //
-bool debug = false;
-static char web_server_IP[256] = "127.0.0.1";
-static char web_server_PORT[256] = "80";
-static char web_server_webpage[256] = "C:\\data_1K.html";
-
-									
+//
+//
+//static ImGuiOnceUponAFrame web_settings;	// Web.server settings.
+//				if (web_settings)			// Will have to use my regex load here to parse data.
+//					{
+//            			ifstream file("WEB.server.setting", ios::in|ios::ate);
+//            			if (file.is_open())
+//            				{						
+//							streampos size;			
+//					  		size = file.tellg();
+//							file.seekg (0, ios::beg);
+//							file.read (bookmarks_kept, size);
+//							file.close();
+//							}
+//					}									
 //////////////////////////////////////////////////////////
 //
-// FTP server settings. Values below default
+// FTP server loading area
 //
-static char ftp_server_IP[256] = "127.0.0.2";
-static char ftp_server_PORT[256] = "2020";
-static char ftp_server_folder[256] = "C:\\home";
+//
+//
+//
+//static ImGuiOnceUponAFrame FTP_settings;	// FTP.server settings.
+//				if (FTP_settings)			// Will have to use my regex load here to parse data.
+//					{
+//            			ifstream file("FTP.server.setting", ios::in|ios::ate);
+//            			if (file.is_open())
+//            				{						
+//							streampos size;			
+//					  		size = file.tellg();
+//							file.seekg (0, ios::beg);
+//							file.read (bookmarks_kept, size);
+//							file.close();
+//							}
+//					}
 /////////////////////////////////////////////////////////						            
-	
+			
   // Main loop
     MSG msg;
     ZeroMemory(&msg, sizeof(msg));
@@ -404,12 +587,54 @@ static char ftp_server_folder[256] = "C:\\home";
             continue;
         }									  
         ImGui_ImplDX9_NewFrame();             
+///////////////////////////////////////////////////////////
+//
+//	New code proving ground.
+//
+//	All new code dumped into test headers.
+//
+//		
+		if(show_new_code_area)
+		{
+			ImGui::Begin("Code Blocks", &show_new_code_area);
+//////////////////////////////////////////////////////////////
+//
+// Currently unused code
+//
+//			
+
+			
+			if (ImGui::CollapsingHeader("Threading tests")) 
+            {
+            ImGui::Text("Testing threading");
+            ImGui::Text("");
+            ImGui::Text("Main interface threaded");
+			ImGui::Text("Web browser settings still not.");
+			ImGui::Text("");
+			if(ImGui::Button("NETSTAT -A"))
+			{
+				static ImGuiOnceUponAFrame test;
+				if (test)
+				{
+					boost::thread_group threads;
+					threads.create_thread(Web_server_check);
+				}	
+			}
+			}
+			
+			ImGui::Separator();
+			ImGui::End();
+		}
+/////////////////////////////////////////////////////////////////
+//
+//	Main window call.
+//
+		show_server_main	=	true;
 		
 		
 		if(show_server_main)
 		{
-			//ImGui::SetNextWindowPos(ImVec2(150, 80));
-			ImGui::SetNextWindowSize(ImVec2(935,535));
+			ImGui::SetNextWindowSize(ImVec2(970,535));
 			ImGui::Begin("Is0bel server", &show_server_main, ImGuiWindowFlags_NoScrollbar  | ImGuiWindowFlags_NoResize);
 			ImGui::Text("");
 			ImGui::Text(" Web server:");
@@ -472,7 +697,7 @@ static char ftp_server_folder[256] = "C:\\home";
 			ImGui::PopItemWidth();
 			ImGui::EndChild();
 			ImGui::SameLine();
-			ImGui::BeginChild("####Network_tools", ImVec2(300,400), true);
+			ImGui::BeginChild("####Network_tools", ImVec2(340,400), true);
             ImGui::PushItemWidth(-1);
 			ImGui::Text("IP Logs & Block lists & Tools:");
 			ImGui::Separator();
@@ -481,15 +706,37 @@ static char ftp_server_folder[256] = "C:\\home";
 			if(ImGui::Button("Web browser")){show_web_browser = true;}
 			ImGui::SameLine();
 			if (ImGui::Button("About")){show_about_server = true;}
+			ImGui::SameLine();
+			ImGui::Button("Snap-on");
 			ImGui::Separator();
 			if(ImGui::Button("Logging")){show_network_tools_logging=true;}
 			ImGui::SameLine();
 			if(ImGui::Button("Blocked")){show_network_tools_blocked=true;}
 			ImGui::SameLine();
 			if(ImGui::Button("Activities FTP/L")){show_network_tools_FTP_log=true;}
-            ImGui::Separator();
-            ImGui::Checkbox("Maintenance     ",&preventative_maintenance);
             ImGui::SameLine();
+			ImGui::Button("Kit Box");
+			ImGui::Separator();
+            static int Maintenance_start = 1;
+            ImGui::PushID(Maintenance_start);
+			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.2f, 6.0f, 0.9f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));
+            ImGui::Button("Start##1");
+  			ImGui::PopStyleColor(3);
+            ImGui::PopID();          
+            ImGui::SameLine();
+            static int Maintenance_STOP = 1;
+            ImGui::PushID(Maintenance_STOP);                 
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(2.0f, 0.8f, 0.7f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.8f));
+            ImGui::Button("Stop##1");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();		
+            ImGui::SameLine();
+            ImGui::Text("Maintenance");
+			ImGui::SameLine(230);
             ImGui::SmallButton("?##1");
             if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text(" Preventative maintenance\n\n Spybot scanning\n Virus checks\n Scheduled restarts\n Garbage collection");ImGui::EndTooltip();}
 			ImGui::SameLine();
@@ -501,8 +748,26 @@ static char ftp_server_folder[256] = "C:\\home";
 			if(preventative_maintenance_status_green){if(ImGui::ImageButton((void *)statusgreen, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
 			if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text("Status - Click for details.");ImGui::EndTooltip();}
 			ImGui::Separator();
-            ImGui::Checkbox("Dummy Traffic   ",&Dummytraffic);
+			static int Dummy_Traffic_start = 1;
+            ImGui::PushID(Dummy_Traffic_start);
+			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.2f, 6.0f, 0.9f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));
+            ImGui::Button("Start##2");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
             ImGui::SameLine();
+            static int Dummy_Traffic_STOP = 1;
+            ImGui::PushID(Dummy_Traffic_STOP);                 
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(2.0f, 0.8f, 0.7f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.8f));
+            ImGui::Button("Stop##2");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();	
+            ImGui::SameLine();
+            ImGui::Text("Dummy Traffic");
+			ImGui::SameLine(230);
             ImGui::SmallButton("?##2");
             if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text(" Test outbound tcp/ip\n\n Send packets of dummy data on specified\n IP:PORT at specified intervals");ImGui::EndTooltip();}
 			ImGui::SameLine();
@@ -514,8 +779,26 @@ static char ftp_server_folder[256] = "C:\\home";
 			if(Dummytraffic_status_green){if(ImGui::ImageButton((void *)statusgreen, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
 			if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text("Status - Click for details.");ImGui::EndTooltip();}
 			ImGui::Separator();
-			ImGui::Checkbox("Echo Allowed    ",&echo_allowed);
+			static int Echo_Allowed_start = 1;
+            ImGui::PushID(Echo_Allowed_start);
+			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.2f, 6.0f, 0.9f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));
+            if(ImGui::Button("Start##3")){boost::thread_group threads;threads.create_thread(ImGui_echo_server_start);}
+			ImGui::PopStyleColor(3);
+            ImGui::PopID();
 			ImGui::SameLine();
+			static int Echo_Allowed_STOP = 1;
+            ImGui::PushID(Echo_Allowed_STOP);                 
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(2.0f, 0.8f, 0.7f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.8f));
+            if(ImGui::Button("Stop##3")){}
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();	
+			ImGui::SameLine();
+			ImGui::Text("Echo Allowed");
+			ImGui::SameLine(230);
 			ImGui::SmallButton("?##3");
 			if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text(" Test inbound tcp/ip\n\n Send a string packet to server\n Receive an echo of the string sent");ImGui::EndTooltip();}
 			ImGui::SameLine();
@@ -527,8 +810,26 @@ static char ftp_server_folder[256] = "C:\\home";
 			if(echo_allowed_status_green){if(ImGui::ImageButton((void *)statusgreen, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
 			if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text("Status - Click for details.");ImGui::EndTooltip();}
 			ImGui::Separator();
-			ImGui::Checkbox("Enable chat     ",&enable_chat);
+			static int Enable_chat_start = 1;
+            ImGui::PushID(Enable_chat_start);
+			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.2f, 6.0f, 0.9f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));
+            ImGui::Button("Start##4");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
             ImGui::SameLine();
+            static int Enable_chat_STOP = 1;
+            ImGui::PushID(Enable_chat_STOP);                 
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(2.0f, 0.8f, 0.7f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.8f));
+            ImGui::Button("Stop##4");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();	
+            ImGui::SameLine();
+            ImGui::Text("Enable chat");
+			ImGui::SameLine(230);
             ImGui::SmallButton("?##4");
             if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text(" Internet relay chat\n\n IRC server setup\n Admin bot setup \n Activities");ImGui::EndTooltip();}
 			ImGui::SameLine();
@@ -540,8 +841,26 @@ static char ftp_server_folder[256] = "C:\\home";
 			if(enable_chat_status_green){if(ImGui::ImageButton((void *)statusgreen, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
 			if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text("Status - Click for details.");ImGui::EndTooltip();}
 			ImGui::Separator();
-			ImGui::Checkbox("Teamspeak Server",&team_speak);
+			static int Teamspeak_Server_start = 1;
+            ImGui::PushID(Teamspeak_Server_start);
+			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.2f, 6.0f, 0.9f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));
+            ImGui::Button("Start##5");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
             ImGui::SameLine();
+            static int Teamspeak_Server_STOP = 1;
+            ImGui::PushID(Teamspeak_Server_STOP);                 
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(2.0f, 0.8f, 0.7f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.8f));
+            ImGui::Button("Stop##5");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
+            ImGui::SameLine();
+            ImGui::Text("Teamspeak Server");
+			ImGui::SameLine(230);
             ImGui::SmallButton("?##5");
             if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text(" VOIP Comms\n\n Hosting\n Setup");ImGui::EndTooltip();}
 			ImGui::SameLine();
@@ -553,8 +872,26 @@ static char ftp_server_folder[256] = "C:\\home";
 			if(team_speak_status_green){if(ImGui::ImageButton((void *)statusgreen, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
 			if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text("Status - Click for details.");ImGui::EndTooltip();}
 			ImGui::Separator();
-			ImGui::Checkbox("Log forwarding  ",&log_to_other);
+			static int Log_forwarding_start = 1;
+            ImGui::PushID(Log_forwarding_start);
+			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.2f, 6.0f, 0.9f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));
+            ImGui::Button("Start##6");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
             ImGui::SameLine();
+            static int Log_forwarding_STOP = 1;
+            ImGui::PushID(Log_forwarding_STOP);                 
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(2.0f, 0.8f, 0.7f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.8f));
+            ImGui::Button("Stop##6");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
+            ImGui::SameLine();
+            ImGui::Text("Log forwarding");
+			ImGui::SameLine(230);
             ImGui::SmallButton("?##6");
             if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text(" Logging to other device\n\n E-mail event logging\n Devices\n priorities");ImGui::EndTooltip();}
 			ImGui::SameLine();
@@ -566,8 +903,26 @@ static char ftp_server_folder[256] = "C:\\home";
 			if(log_to_other_status_green){if(ImGui::ImageButton((void *)statusgreen, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
 			if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text("Status - Click for details.");ImGui::EndTooltip();}			
 			ImGui::Separator();
-			ImGui::Checkbox("TCP Wakeup/sleep",&startup_shutdown);
+			static int TCP_sleep_start = 1;
+            ImGui::PushID(TCP_sleep_start);
+			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.2f, 6.0f, 0.9f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));
+            ImGui::Button("Start##7");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
             ImGui::SameLine();
+            static int TCP_sleep_STOP = 1;
+            ImGui::PushID(TCP_sleep_STOP);                 
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(2.0f, 0.8f, 0.7f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.8f));
+            ImGui::Button("Stop##7");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();	
+            ImGui::SameLine();
+            ImGui::Text("TCP Wakeup/sleep");
+			ImGui::SameLine(230);
             ImGui::SmallButton("?##7");
             if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text(" Wakeup / Sleep commands\n\n Lock - key");ImGui::EndTooltip();}
 			ImGui::SameLine();
@@ -579,8 +934,26 @@ static char ftp_server_folder[256] = "C:\\home";
 			if(startup_shutdown_status_green){if(ImGui::ImageButton((void *)statusgreen, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
 			if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text("Status - Click for details.");ImGui::EndTooltip();}
 			ImGui::Separator();
-			ImGui::Checkbox("Automation      ",&automation);
+			static int Automation_start = 1;
+            ImGui::PushID(Automation_start);
+			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.2f, 6.0f, 0.9f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));
+            ImGui::Button("Start##8");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
             ImGui::SameLine();
+            static int Automation_STOP = 1;
+            ImGui::PushID(Automation_STOP);                 
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(2.0f, 0.8f, 0.7f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.8f));
+            ImGui::Button("Stop##8");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();	
+            ImGui::SameLine();
+            ImGui::Text("Automation");
+			ImGui::SameLine(230);
             ImGui::SmallButton("?##8");
             if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text(" Automatic reflexes\n\n Updates\n Server response to fail over");ImGui::EndTooltip();}
 			ImGui::SameLine();
@@ -592,8 +965,26 @@ static char ftp_server_folder[256] = "C:\\home";
 			if(automation_status_green){if(ImGui::ImageButton((void *)statusgreen, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
 			if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text("Status - Click for details.");ImGui::EndTooltip();}
 			ImGui::Separator();
-			ImGui::Checkbox("Contribution    ",&cycles_contribution);
+			static int Contribution_start = 1;
+            ImGui::PushID(Contribution_start);
+			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.2f, 6.0f, 0.9f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));
+            ImGui::Button("Start##9");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
             ImGui::SameLine();
+            static int Contribution_STOP = 1;
+            ImGui::PushID(Contribution_STOP);                 
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(2.0f, 0.8f, 0.7f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.8f));
+            ImGui::Button("Stop##9");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
+            ImGui::SameLine();
+            ImGui::Text("Contribution");
+			ImGui::SameLine(230);
             ImGui::SmallButton("?##9");
             if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text(" Inactive, activities\n\n Donate CPU cycle times\n Research help \n Hosting torrents");ImGui::EndTooltip();}
 			ImGui::SameLine();
@@ -605,8 +996,26 @@ static char ftp_server_folder[256] = "C:\\home";
 			if(cycles_contribution_status_green){if(ImGui::ImageButton((void *)statusgreen, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
 			if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text("Status - Click for details.");ImGui::EndTooltip();}
 			ImGui::Separator();
-			ImGui::Checkbox("MySQL DB        ",&mysql_database_custom);
+			static int MySQL_DB_start = 1;
+            ImGui::PushID(MySQL_DB_start);
+			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.2f, 6.0f, 0.9f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));
+            ImGui::Button("Start##10");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
             ImGui::SameLine();
+            static int MySQL_DB_STOP = 1;
+            ImGui::PushID(MySQL_DB_STOP);                 
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(2.0f, 0.8f, 0.7f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.8f));
+            ImGui::Button("Stop##10");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
+            ImGui::SameLine();
+            ImGui::Text("MySQL DB");
+			ImGui::SameLine(230);
             ImGui::SmallButton("?##10");
             if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text(" MySQL Database management\n\n New\n Add\n Remove\n Change");ImGui::EndTooltip();}
 			ImGui::SameLine();
@@ -618,8 +1027,26 @@ static char ftp_server_folder[256] = "C:\\home";
 			if(mysql_database_custom_status_green){if(ImGui::ImageButton((void *)statusgreen, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
 			if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text("Status - Click for details.");ImGui::EndTooltip();}
 			ImGui::Separator();
-			ImGui::Checkbox("Date & Time     ",&date_time_server);
-			ImGui::SameLine();
+			static int Date_and_Time_start = 1;
+            ImGui::PushID(Date_and_Time_start);
+			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.2f, 6.0f, 0.9f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));
+           	if(ImGui::Button("Start##11")){boost::thread_group threads;threads.create_thread(daytime_server_start);}
+           	ImGui::PopStyleColor(3);
+            ImGui::PopID();
+            ImGui::SameLine();
+            static int Date_and_Time_STOP = 1;
+            ImGui::PushID(Date_and_Time_STOP);                 
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(2.0f, 0.8f, 0.7f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.8f));
+            ImGui::Button("Stop##11");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();	
+            ImGui::SameLine();
+            ImGui::Text("Date & Time");
+			ImGui::SameLine(230);
             ImGui::SmallButton("?##11");
             if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text(" Date and time server\n\n Client request for server date & time");ImGui::EndTooltip();}
 			ImGui::SameLine();
@@ -631,8 +1058,26 @@ static char ftp_server_folder[256] = "C:\\home";
 			if(date_time_server_status_green){if(ImGui::ImageButton((void *)statusgreen, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
 			if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text("Status - Click for details.");ImGui::EndTooltip();}
 			ImGui::Separator();
-			ImGui::Checkbox("Bandwidth usage ",&bandwidth_monitor);
-			ImGui::SameLine();
+			static int Bandwidth_usage_start = 1;
+            ImGui::PushID(Bandwidth_usage_start);
+			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.2f, 6.0f, 0.9f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));
+            ImGui::Button("Start##12");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
+            ImGui::SameLine();
+            static int Bandwidth_usage_STOP = 1;
+            ImGui::PushID(Bandwidth_usage_STOP);                 
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(2.0f, 0.8f, 0.7f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.8f));
+            ImGui::Button("Stop##12");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();	
+            ImGui::SameLine();
+            ImGui::Text("Bandwidth usage");
+			ImGui::SameLine(230);
             ImGui::SmallButton("?##12");
             if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text(" Bandwidth monitor\n\n Upstream\n Downstream\n Limits & caps");ImGui::EndTooltip();}
 			ImGui::SameLine();
@@ -644,8 +1089,26 @@ static char ftp_server_folder[256] = "C:\\home";
 			if(bandwidth_monitor_status_green){if(ImGui::ImageButton((void *)statusgreen, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
 			if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text("Status - Click for details.");ImGui::EndTooltip();}
 			ImGui::Separator();
-			ImGui::Checkbox("IoT Devices     ",&IoT_device_relay_or_storage);
-			ImGui::SameLine();
+			static int IoT_Devices_start = 1;
+            ImGui::PushID(IoT_Devices_start);
+			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.2f, 6.0f, 0.9f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));
+            ImGui::Button("Start##13");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
+            ImGui::SameLine();
+            static int IoT_Devices_STOP = 1;
+            ImGui::PushID(IoT_Devices_STOP);                 
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(2.0f, 0.8f, 0.7f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.8f));
+            ImGui::Button("Stop##13");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
+            ImGui::SameLine();
+            ImGui::Text("IoT Devices");
+			ImGui::SameLine(230);
             ImGui::SmallButton("?##13");
             if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text(" Internet of Things Devices\n\n Connectivity\n storage\n Setup");ImGui::EndTooltip();}
 			ImGui::SameLine();
@@ -657,8 +1120,26 @@ static char ftp_server_folder[256] = "C:\\home";
 			if(IoT_device_relay_or_storage_status_green){if(ImGui::ImageButton((void *)statusgreen, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
 			if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text("Status - Click for details.");ImGui::EndTooltip();}
 			ImGui::Separator();
-			ImGui::Checkbox("Local network   ",&local_area_network);
-			ImGui::SameLine();
+			static int Local_network_start = 1;
+            ImGui::PushID(Local_network_start);
+			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.2f, 6.0f, 0.9f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));
+            ImGui::Button("Start##14");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
+            ImGui::SameLine();
+            static int Local_network_STOP = 1;
+            ImGui::PushID(Local_network_STOP);                 
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(2.0f, 0.8f, 0.7f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.8f));
+            ImGui::Button("Stop##14");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
+            ImGui::SameLine();
+            ImGui::Text("Local network");
+			ImGui::SameLine(230);
             ImGui::SmallButton("?##14");
             if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text(" Local network settings\n\n Intranet\n File sharing\n Streaming services");ImGui::EndTooltip();}
 			ImGui::SameLine();
@@ -670,30 +1151,77 @@ static char ftp_server_folder[256] = "C:\\home";
 			if(local_area_network_status_green){if(ImGui::ImageButton((void *)statusgreen, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
 			if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text("Status - Click for details.");ImGui::EndTooltip();}
 			ImGui::Separator();
+			static int Ret_Dec_Services_start = 1;
+            ImGui::PushID(Ret_Dec_Services_start);
+			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.2f, 6.0f, 0.9f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));
+            ImGui::Button("Start##15");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
+            ImGui::SameLine();
+            static int Ret_Dec_Services_STOP = 1;
+            ImGui::PushID(Ret_Dec_Services_STOP);                 
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(2.0f, 0.8f, 0.7f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.8f));
+            ImGui::Button("Stop##15");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();	
+            ImGui::SameLine();
+            ImGui::Text("Ret-Dec Services");
+			ImGui::SameLine(230);
+            ImGui::SmallButton("?##15");
+            if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text(" Retargetable decompiler\n\n Settings\n Current process\n Statistics");ImGui::EndTooltip();}
+			ImGui::SameLine();
+			if(ImGui::Button("Setup##15")){retargetable_decompiler_setup=true;}
+			ImGui::SameLine();
+			if(retargetable_decompiler_status_empty){if(ImGui::ImageButton((void *)statusempty, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
+			if(retargetable_decompiler_status_red){if(ImGui::ImageButton((void *)statusred, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
+			if(retargetable_decompiler_status_yellow){if(ImGui::ImageButton((void *)statusyellow, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
+			if(retargetable_decompiler_status_green){if(ImGui::ImageButton((void *)statusgreen, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
+			if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text("Status - Click for details.");ImGui::EndTooltip();}
+			ImGui::Separator();
+//			ImGui::Checkbox("S2S Services    ",&s2s_server_services);
+//			ImGui::SameLine();
+//          ImGui::SmallButton("?##16");
+//          if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text(" Server to server connectivity\n\n Discover mode\n Settings\n S2S tools");ImGui::EndTooltip();}
+//			ImGui::SameLine();
+//			if(ImGui::Button("Setup##16")){s2s_server_services_setup=true;}
+//			ImGui::SameLine();
+//			if(s2s_server_services_status_empty){if(ImGui::ImageButton((void *)statusempty, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
+//			if(s2s_server_services_status_red){if(ImGui::ImageButton((void *)statusred, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
+//			if(s2s_server_services_status_yellow){if(ImGui::ImageButton((void *)statusyellow, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
+//			if(s2s_server_services_status_green){if(ImGui::ImageButton((void *)statusgreen, ImVec2(16, 16), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}}
+//			if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text("Status - Click for details.");ImGui::EndTooltip();}
+//			ImGui::Separator();
 			if(ImGui::Button("TCP::IP -I"))
 			{
 				static ImGuiOnceUponAFrame Ipstatus;	
 				if (Ipstatus)
 					{
-						system("ipconfigure.bat");
+						boost::thread_group threads;
+						threads.create_thread(ipconfigure);
 					}
 			}
-			ImGui::SameLine();
-			if(ImGui::Button("Netstat On"))
+			ImGui::SameLine(125);
+			if(ImGui::Button("Netstat ON"))
 			{
 				static ImGuiOnceUponAFrame Ipstatus;	
 				if (Ipstatus)
 					{
-						system("ipconfigure.netstat.on.bat");
+						boost::thread_group threads;
+						threads.create_thread(ipconfigure_netstat_on);
 					}
 			}
-			ImGui::SameLine();
+			ImGui::SameLine(240);
 			if(ImGui::Button("Netstat -A"))
 			{
 				static ImGuiOnceUponAFrame Ipstatus;	
 				if (Ipstatus)
 					{
-						system("ipconfigure.netstat.a.bat");
+						boost::thread_group threads;
+						threads.create_thread(ipconfigure_netstat_a);
 					}
 			}
 			
@@ -702,35 +1230,42 @@ static char ftp_server_folder[256] = "C:\\home";
 				static ImGuiOnceUponAFrame Ipstatus;	
 				if (Ipstatus)
 					{
-						system("ipconfigure.netstat.o.bat");
+						boost::thread_group threads;
+						threads.create_thread(ipconfigure_netstat_o);
 					}
 			}
-			ImGui::SameLine();
+			ImGui::SameLine(125);
 			if(ImGui::Button("Netstat -T"))
 			{
 				static ImGuiOnceUponAFrame Ipstatus;	
 				if (Ipstatus)
 					{
-						system("ipconfigure.netstat.t.bat");
+						boost::thread_group threads;
+						threads.create_thread(ipconfigure_netstat_t);
 					}
 			}
-			ImGui::SameLine();
+			ImGui::SameLine(240);
 			if(ImGui::Button("Netstat -F"))
 			{
 				static ImGuiOnceUponAFrame Ipstatus;	
 				if (Ipstatus)
 					{
-						system("ipconfigure.netstat.f.bat");
+						boost::thread_group threads;
+						threads.create_thread(ipconfigure_netstat_f);
 					}
 			}
 			ImGui::PopItemWidth();
 			ImGui::EndChild();
 			
 			
-			ImGui::BeginChild("####start_web_server", ImVec2(300,55), true,ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+			ImGui::BeginChild("####start_web_server", ImVec2(300,60), true,ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
             
 			ImGui::SameLine();
-			if(ImGui::ImageButton((void *)resume, ImVec2(20, 20), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}
+			if(ImGui::ImageButton((void *)resume, ImVec2(20, 20), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255)))
+			{
+				boost::thread_group threads;
+				threads.create_thread(ImGui_web_server_start);
+			}
         	if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text("Start");ImGui::EndTooltip();}
 			ImGui::SameLine();
 			if(ImGui::ImageButton((void *)pause, ImVec2(20, 20), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}
@@ -750,7 +1285,7 @@ static char ftp_server_folder[256] = "C:\\home";
 			ImGui::EndChild();
 			
             ImGui::SameLine();
-			ImGui::BeginChild("####start_ftp_server", ImVec2(300,55), true,ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+			ImGui::BeginChild("####start_ftp_server", ImVec2(300,60), true,ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
             
 			if(ImGui::ImageButton((void *)resume, ImVec2(20, 20), ImVec2(0,0),ImVec2(1,1),0,ImVec4(0,0,0,0),ImVec4(255,255,255,255))){}
 	        if (ImGui::IsItemHovered()){ImGui::BeginTooltip();ImGui::Text("Start");ImGui::EndTooltip();}
@@ -773,22 +1308,22 @@ static char ftp_server_folder[256] = "C:\\home";
 			ImGui::EndChild();
 			
 			ImGui::SameLine();
-			ImGui::BeginChild("####Network_tools_Running_info", ImVec2(300,55), true,ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+			ImGui::BeginChild("####Network_tools_Running_info", ImVec2(340,60), true,ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
             static int LIVE = 1;
             ImGui::PushID(LIVE);
-			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      // Intresting feature play with me! :)
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.2f, 4.0f, 0.6f));
+			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));      
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.2f, 6.0f, 0.9f));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.2f, 2.0f, 0.6f));
             if(ImGui::Button("Active file transfers")){active_file_transfers=true;}
-            ImGui::SameLine();
+            ImGui::SameLine(200);
             if(ImGui::Button("Web page requests")){Web_page_hits=true;}
             if(ImGui::Button("Server uptime display")){all_services_uptime=true;}
 			ImGui::PopStyleColor(3);
             ImGui::PopID();
-			ImGui::SameLine();
+			ImGui::SameLine(200);
 			static int STOP = 1;
-            ImGui::PushID(STOP);                 // buttons with styles need IDs 0.2f, 2.0f, 0.6f
-            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));      // Intresting feature play with me! :)
+            ImGui::PushID(STOP);                 
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.7f));      
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(2.0f, 0.8f, 0.7f));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(4.0f, 0.3f, 0.8f));
             if(ImGui::Button("Stop All services")){stop_all_services=true;}
@@ -798,9 +1333,14 @@ static char ftp_server_folder[256] = "C:\\home";
 			ImGui::PopStyleVar();
             ImGui::End();
 		}
+//////////////////////////////////////////////////////////////////
+//
+//	Settings windows
+//
 		if(show_HTTP_settings)
 		{
 			ImGui::Begin("HTTP advanced settings", &show_HTTP_settings);
+			
 			ImGui::End();
 		}
 		if(show_FTP_settings)
@@ -846,6 +1386,16 @@ static char ftp_server_folder[256] = "C:\\home";
 		if(echo_allowed_setup)
 		{
 			ImGui::Begin("Echo setup", &echo_allowed_setup);
+			ImGui::Text("");
+			ImGui::Text("Echo server settings:");
+			ImGui::Separator();
+			ImGui::Text("Port");
+			ImGui::InputText("###echo_port_select", echo_server_port, IM_ARRAYSIZE(echo_server_port), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_AutoSelectAll);
+			ImGui::Separator();
+			ImGui::Text("Launch echo client:");
+			if(ImGui::Button("Echo test")){boost::thread_group threads;threads.create_thread(echo_client_test);}
+			ImGui::Separator();
+			ImGui::Text("");
 			ImGui::End();
 		}
 		if(enable_chat_setup)
@@ -896,6 +1446,10 @@ static char ftp_server_folder[256] = "C:\\home";
 		if(date_time_server_setup)
 		{
 			ImGui::Begin("Date and time server setup", &date_time_server_setup);
+			ImGui::Text("");
+			ImGui::Text("Date and time test client:");
+			if(ImGui::Button("Client start")){boost::thread_group threads;threads.create_thread(Date_time_client_start);}
+			ImGui::Separator();
 			ImGui::End();
 		}
 		if(bandwidth_monitor_setup)
@@ -913,6 +1467,20 @@ static char ftp_server_folder[256] = "C:\\home";
 			ImGui::Begin("LAN settings", &local_area_network_setup);
 			ImGui::End();
 		}
+		if(retargetable_decompiler_setup)
+		{
+			ImGui::Begin("Retargetable decompiler setup", &retargetable_decompiler_setup);
+			ImGui::End();
+		}
+		if(s2s_server_services_setup)
+		{
+			ImGui::Begin("Server to server tools & services", &s2s_server_services_setup);
+			ImGui::End();	
+		}
+/////////////////////////////////////////////////////////////////
+//
+// Help calls
+//
 		if(show_web_help)
 		{
 			ImGui::Begin("Web server help", &show_web_help);
@@ -938,7 +1506,7 @@ static char ftp_server_folder[256] = "C:\\home";
 						"Usage & default settings:\n\n"
 						"Clicking the start button (play icon) beneath the FTP server setup.\n"
 						"With default settings IP 127.0.0.2 PORT 2020 will start a \"loop-back address\"\n"
-						"Typing 127.0.0.2:2020 into a FTP program with the FTP server started and is0bel server running.\n"
+						"Typing 127.0.0.`:2020 into a FTP program with the FTP server started and is0bel server running.\n"
 						"Will display the FTP index folder. This is so you can have the client and server on the same machine for testing.\n\n"
 						"Actual internet face setup:\n\n"
 						"The programs heart IS a server and with port forwarding enabled from the router with static IP can be used as such.\n"
@@ -956,15 +1524,19 @@ static char ftp_server_folder[256] = "C:\\home";
 			ImGui::Text("");
 			ImGui::Text("-Administrative");ImGui::SameLine(200);ImGui::Text("-- Admin password and screen lock and next program start password required.");
 			ImGui::Text("-Web browser");ImGui::SameLine(200);ImGui::Text("-- For browsing or loop back testing.");
-			ImGui::Text("-Logging");ImGui::SameLine(200);ImGui::Text("-- All tcp/udp/ip packets sent to the home brew server with source location if possible.");
+			ImGui::Text("-Logging");ImGui::SameLine(200);ImGui::Text("-- All tcp/udp/ip packets sent to the Is0bel server with source location if possible.");
 			ImGui::Text("-Blocked");ImGui::SameLine(200);ImGui::Text("-- Block all repeat offenders from accessing content from the server.");
 			ImGui::Text("-Activities FTP/L");ImGui::SameLine(200);ImGui::Text("-- Logs all attempts at login and monitors all file activities.");
 			ImGui::Text("");
-			ImGui::Text("This is not a toy program, do not click a checkbox until setup complete.");
-			ImGui::Text("Clicking a checkbox will start or enable a service.");
+			ImGui::Text("This is not a toy program, do not click a start button until setup complete.");
+			ImGui::Text("Clicking a start button will start or enable a service.");
 			ImGui::End();
 			
 		}
+//////////////////////////////////////////////////////////////////
+//
+//	All services.
+//
 		if (stop_all_services)
 		ImGui::OpenPopup("         Warning: STOP ALL?");
         if (ImGui::BeginPopupModal("         Warning: STOP ALL?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
@@ -991,12 +1563,20 @@ static char ftp_server_folder[256] = "C:\\home";
 			ImGui::Begin("All services uptime", &all_services_uptime);
 			ImGui::End();
 		}
-    	          
-
 /////////////////////////////////////////////////////////////
 //
 //	Still WIP, will be using LUA.editor browser for testing
 //	
+//	Calls to be added to browser.
+//
+//void ipconfigure_wmic() 
+//{
+//system("ipconfigure.wmic.bat");
+//}
+//void ipconfigure_wmic_help() 
+//{
+//system("ipconfigure.wmic.help.bat");
+//}	
 //
 //		
 		if (show_web_browser)
@@ -1387,7 +1967,7 @@ if(show_bookmarks_saved)
 			ImGui::Text("Is0bel server by Luke Hays");
             ImGui::Text("");
 			ImGui::Text("Written in C++, using Dev ++ with the TDM Mingw64 compiler.");
-            ImGui::Text("Useing IMGUI API., Boost 1.67 library and MySQL++.");
+            ImGui::Text("Useing IMGUI API, Boost 1.67 library and MySQL++.");
             ImGui::Text("Wes built for testing tcp/ip programming.");
             ImGui::Text("Is0bel server incorporates everything i would need for a small personal Internet facing server.");
             ImGui::Text("Is0bel server was named after a gifted young women. =) The shadows will never be the same.");
@@ -1427,3 +2007,5 @@ if(show_bookmarks_saved)
 
     return 0;
 }
+
+

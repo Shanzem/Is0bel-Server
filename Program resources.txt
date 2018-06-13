@@ -4,38 +4,67 @@ Program in depth Details
 
 Working:
 
-
+Echo server with Is0bel and client for testing.
+Web server.
 
 -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
+ 
 Technical:
 
-Breaking down what i need.
+New joys, parsing 6000+ files and going to be adding more.
+This is also the largest program i have built so far. :)
 
-So i need a setup where a web server can handle multiple client requests.
-Will this effect The FTP server on a different IP:PORT? shouldn't do.
+Ok so i am going to look into turning an exe into a service.
+Included a stand alone Web.server executable. 
+Argv command line based. check accompanying batch file.
+"Web.server.start.bat" for quick and easy setup.
 
-I can program it to separate the code for FTP requests and how it is handled. 
-Will the program respond?
+Still need to add collision check. That means boost regex.
+Still need to add logging.
 
-Can also perform a collision checks of the IPs using regex.
-String stream the IPs and ports against already running services.
-Compare strings if PORT or IPs match flag an error.
+--------------------------------------------------------------------
+[name]-[target compiler]-[Multi Threading]-[Architecture]-[Version]
 
-I know for this to work i am going to go with class headers and cpp files.
-something i am itching to do.
+libws2_32.a
 
-So far a simple single-threaded server implementation of HTTP 1.0.
-is where i am at. that would be great but i could a least do with HTML 3 or 4.
+libwsock32.a
 
-Going to work through the tutorials this weekend for creating a simple timer server.
+libboost_coroutine-mgw49-mt-x32-1_67.dll.a
 
-It was going to be implemented anyway shall start there. 
+libboost_date_time-mgw49-mt-x32-1_67.dll.a
 
+libboost_exception-mgw49-mt-x32-1_67.a
 
+libboost_serialization-mgw49-mt-x32-1_67.dll.a
 
+libboost_signals-mgw49-mt-x32-1_67.dll.a
 
+libboost_system-mgw49-mt-x32-1_67.a
 
+libboost_system-mgw49-mt-x32-1_67.dll.a
 
+libboost_thread-mgw49-mt-x32-1_67.dll.a
 
+libboost_chrono-mgw49-mt-x32-1_67.dll.a
+
+libboost_filesystem-mgw49-mt-x32-1_67.dll.a
+
+libboost_regex-mgw49-mt-x32-1_67.dll.a
+
+Echo.Client.exe (Called from Echo setup for testing echo)
+
+Web.server.exe (Stand alone web server to test services idea)
+
+Web.server.start.bat (Run to start web server stand alone)
+
+Time.date.client.exe
+
+Time.date.client.start.bat
+--------------------------------------------------------------------
+Need for Snap-on
+
+OptionalFeatures.exe - in system32 folder 
+FOR FTP SETTINGS needs to be installed as optional component.
+--------------------------------------------------------------------
+			           
 
